@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KidTube</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Sans+MS&display=swap');
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e6f3ff; /* Light blue background */
+        }
+        .header {
+            background-color: #ffcccb; /* Light pink */
+            padding: 10px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            color: #ff6f61; /* Coral */
+        }
+        .search-bar {
+            flex-grow: 1;
+            margin: 0 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .search-bar input[type="text"] {
+            width: 50%;
+            padding: 10px;
+            border: 2px solid #ffd700; /* Yellow */
+            border-radius: 20px 0 0 20px;
+            outline: none;
+            font-size: 16px;
+            background-color: #fff;
+        }
+        .search-bar input[type="submit"] {
+            background-color: #ffd700; /* Yellow */
+            color: #ff6f61; /* Coral */
+            padding: 10px 20px;
+            border: none;
+            border-radius: 0 20px 20px 0;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .search-bar input[type="submit"]:hover {
+            background-color: #ffca28; /* Darker yellow */
+        }
+        .container {
+            display: flex;
+            margin-top: 20px;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #d4edda; /* Light green */
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            height: calc(100vh - 80px);
+            position: fixed;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar ul li {
+            margin: 15px 0;
+        }
+        .sidebar ul li a {
+            text-decoration: none;
+            color: #ff6f61; /* Coral */
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            transition: color 0.3s;
+        }
+        .sidebar ul li a:hover {
+            color: #ffca28; /* Yellow */
+        }
+        .sidebar ul li a::before {
+            content: "🌟"; /* Star icon */
+            margin-right: 10px;
+        }
+        .main-content {
+            margin-left: 220px;
+            padding: 20px;
+            width: calc(100% - 220px);
+        }
+        #processing {
+            display: none;
+            color: #ff6f61; /* Coral */
+            font-style: italic;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .suggestions {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .video-card {
+            background-color: #fff;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .video-card:hover {
+            transform: scale(1.05);
+        }
+        .video-card img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+        }
+        .video-card p {
+            margin: 10px;
+            font-size: 14px;
+            color: #333;
+        }
+        .feedback {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 10px;
+        }
+        .feedback button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            transition: color 0.3s;
+        }
+        .thumbs-up:hover {
+            color: #4CAF50; /* Green */
+        }
+        .thumbs-down:hover {
+            color: #ff4444; /* Red */
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .safe { background-color: #d4edda; color: #3c763d; border: 1px solid #c3e6cb; }
+        .blocked { background-color: #f2dede; color: #a94442; border: 1px solid #ebccd1; }
+        .error { background-color: #fcf8e3; color: #8a6d3b; border: 1px solid #faebcc; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>KidTube</h1>
+        <form method="POST" class="search-bar" onsubmit="document.getElementById('processing').style.display='block';">
+            <input type="text" name="url" placeholder="Enter YouTube URL">
+            <input type="submit" value="Check Video">
+        </form>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="#">Explore</a></li>
+                <li><a href="#">Subscriptions</a></li>
+                <li><a href="/settings">Settings</a></li>
+                <li><a href="/monitor">Monitor</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <p id="processing">Processing...</p>
+            {% if suggestions %}
+                <div class="suggestions">
+                    {% for video in suggestions %}
+                        <div class="video-card" onclick="window.location.href='/watch/{{ video.id }}'">
+                            <img src="{{ video.thumbnail }}" alt="{{ video.title }}">
+                            <p>{{ video.title }}</p>
+                            <div class="feedback">
+                                <form method="POST">
+                                    <input type="hidden" name="url" value="https://www.youtube.com/watch?v={{ video.id }}">
+                                    <input type="hidden" name="action" value="like">
+                                    <button type="submit" class="thumbs-up">👍</button>
+                                </form>
+                                <form method="POST">
+                                    <input type="hidden" name="url" value="https://www.youtube.com/watch?v={{ video.id }}">
+                                    <input type="hidden" name="action" value="dislike">
+                                    <button type="submit" class="thumbs-down">👎</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% if result %}
+                <div class="result {{ 'safe' if 'safe' in result else 'blocked' if 'blocked' in result else 'error' }}">
+                    {{ result | safe }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <script>
+        window.onload = function() {
+            if (document.querySelector('.result')) {
+                document.getElementById('processing').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KidTube - Watch</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Sans+MS&display=swap');
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e6f3ff; /* Light blue background */
+        }
+        .header {
+            background-color: #ffcccb; /* Light pink */
+            padding: 10px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #ff6f61; /* Coral */
+        }
+        .container {
+            display: flex;
+            margin-top: 20px;
+            padding: 20px;
+        }
+        .video-player {
+            flex: 3;
+            margin-right: 20px;
+        }
+        .video-player iframe {
+            width: 100%;
+            height: 400px;
+            border: none;
+            border-radius: 15px;
+        }
+        .related-videos {
+            flex: 1;
+        }
+        .related-videos h2 {
+            margin-top: 0;
+            color: #ff6f61; /* Coral */
+        }
+        .related-card {
+            background-color: #fff;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .related-card:hover {
+            transform: scale(1.05);
+        }
+        .related-card img {
+            width: 100%;
+            height: 90px;
+            object-fit: cover;
+        }
+        .related-card p {
+            margin: 10px;
+            font-size: 14px;
+            color: #333;
+        }
+        .message {
+            margin: 20px;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .blocked { background-color: #f2dede; color: #a94442; border: 1px solid #ebccd1; }
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .ad-placeholder {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            text-align: center;
+            font-style: italic;
+            color: #555;
+        }
+        .checking-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>KidTube</h1>
+    </div>
+    <div id="loading" class="loading-screen">
+        <div class="spinner"></div>
+        <p>Processing video for safety...</p>
+        <div class="ad-placeholder">
+            Ad Placeholder (Future Ad Space - Subscribe to Skip)
+        </div>
+    </div>
+    <div class="container" id="content" style="display: none; position: relative;">
+        {% if is_safe %}
+            <div class="checking-indicator" id="checkingIndicator">Checking...</div>
+            <div class="video-player">
+                <iframe id="player" src="https://www.youtube.com/embed/{{ video_id }}?autoplay=1&enablejsapi=1" allowfullscreen></iframe>
+            </div>
+            <div class="related-videos">
+                <h2>Related Videos</h2>
+                {% for video in related_videos %}
+                    <div class="related-card" onclick="window.location.href='/watch/{{ video.id }}'">
+                        <img src="{{ video.thumbnail }}" alt="{{ video.title }}">
+                        <p>{{ video.title }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="message blocked">
+                {{ message | safe }}
+            </div>
+        {% endif %}
+    </div>
+    <script>
+        // Load YouTube IFrame API
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        var player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                events: {
+                    'onReady': onPlayerReady
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            // Show content after initial metadata check
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'flex';
+
+            // Start polling for background safety check
+            pollSafetyCheck();
+        }
+
+        function pollSafetyCheck() {
+            fetch('/check_safety/{{ video_id }}')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "processing") {
+                        // Keep polling if still checking
+                        setTimeout(pollSafetyCheck, 2000);
+                    } else if (!data.is_safe) {
+                        // Stop video and show blocked message
+                        player.stopVideo();
+                        document.getElementById('content').innerHTML = `
+                            <div class="message blocked">
+                                ${data.message}
+                            </div>
+                        `;
+                        document.getElementById('checkingIndicator').style.display = 'none';
+                    } else {
+                        // Video is safe, hide checking indicator
+                        document.getElementById('checkingIndicator').style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error polling safety check:', error);
+                    document.getElementById('content').innerHTML = `
+                        <div class="message blocked">
+                            Oops, something went wrong while checking the video.
+                        </div>
+                    `;
+                    document.getElementById('checkingIndicator').style.display = 'none';
+                });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KidTube Settings</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Sans+MS&display=swap');
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            margin: 20px;
+            background-color: #e6f3ff; /* Light blue background */
+        }
+        h1 {
+            color: #ff6f61; /* Coral */
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        label {
+            font-weight: bold;
+            color: #ff6f61; /* Coral */
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #ffd700; /* Yellow */
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 16px;
+            background-color: #fff;
+        }
+        input[type="submit"] {
+            background-color: #ffd700; /* Yellow */
+            color: #ff6f61; /* Coral */
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        input[type="submit"]:hover {
+            background-color: #ffca28; /* Darker yellow */
+        }
+    </style>
+</head>
+<body>
+    <h1>KidTube Parental Settings</h1>
+    <form method="POST" action="/settings">
+        <label for="bad_words">Bad Words (comma-separated):</label><br>
+        <input type="text" id="bad_words" name="bad_words" value="{{ settings['bad_words'] | join(', ') }}"><br><br>
+        <input type="submit" value="Save Settings">
+    </form>
+</body>
+</html>

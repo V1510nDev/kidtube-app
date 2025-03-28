@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KidTube Monitoring</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Sans+MS&display=swap');
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            margin: 20px;
+            background-color: #e6f3ff; /* Light blue background */
+        }
+        h1 {
+            color: #ff6f61; /* Coral */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #ffd700; /* Yellow */
+            color: #ff6f61; /* Coral */
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        a {
+            color: #ff6f61; /* Coral */
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        a:hover {
+            color: #ffca28; /* Yellow */
+        }
+    </style>
+</head>
+<body>
+    <h1>KidTube Monitoring</h1>
+    <p><a href="/">Back to Home</a></p>
+    <table>
+        <tr>
+            <th>Video ID</th>
+            <th>Title</th>
+            <th>Result</th>
+            <th>Timestamp</th>
+        </tr>
+        {% for entry in video_log %}
+            <tr>
+                <td>{{ entry.video_id }}</td>
+                <td>{{ entry.title }}</td>
+                <td>{{ entry.result }}</td>
+                <td>{{ entry.timestamp }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
